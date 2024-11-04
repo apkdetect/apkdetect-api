@@ -233,7 +233,9 @@ def main():
                         help="Upload analysis as private")
     parser.add_argument('-c', '--comment', action='store',
                         help="Add comment to uploaded file")
-    
+    parser.add_argument('-uf', '--upload-folder', action='store',
+                        help="Folder containing APK files to upload")
+
     args = parser.parse_args()
 
     if len(sys.argv) < 2:
@@ -259,7 +261,6 @@ def main():
         response = apkdetect.get_task(args.task_id)
 
     elif args.upload:
-
         # Share with community by default
         community = 1
 
@@ -269,15 +270,27 @@ def main():
 
         response = apkdetect.upload(args.upload, community, args.comment)
 
+    elif args.upload_folder:
+        # Share with community by default
+        community = 1
+
+        # Analysis should be private
+        if args.private:
+            community = 0
+
+        folder_path = args.upload_folder
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.apk'):
+                file_path = os.path.join(folder_path, filename)
+                print(f"Uploading file: {file_path}")
+                response = apkdetect.upload(file_path, community, args.comment)
+                pprint(response)
+
     elif args.download or args.dex:
         if not args.output:
             print("Please specify the output filepath with '-o' option")
-
-        # Download file
         elif args.download:
             response = apkdetect.download_file(args.download, args.output)
-
-        # Download decrypted DEX file
         elif args.dex:
             response = apkdetect.download_decrypted_dex(args.dex, args.output)
 
